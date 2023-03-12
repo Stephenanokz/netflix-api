@@ -1,0 +1,137 @@
+const router = require("express").Router();
+const User = require("../models/User");
+const CryptoJS = require("crypto-js");
+const verify = require("../middlewares/verifyToken");
+
+//GET ALL
+router.get("/", verify, async (req, res) => {
+  const query = req.query.new;
+  if (req.user.isAdmin) {
+    try {
+      const users = query
+        ? await User.find().sort({ _id: -1 }).limit(5)
+        : await User.find();
+      res.status(200).json(users);
+    } catch (err) {
+      res.status(500).json(err);
+    }
+  } else {
+    res.status(403).json("You are not allowed to see all users");
+  }
+});
+
+//GET ONE
+router.get("/find/:id", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    const { password, ...info } = user._doc;
+    res.status(200).json(info);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
+//CREATE
+router.post("/", verify, async (req, res) => {
+  if (req.user.isAdmin) {
+    const newUser = new User({
+      username: req.body.username,
+      email: req.body.email,
+      profilePic: req.body.profilePic,
+      city: req.body.city,
+      country: req.body.country,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      phone: req.body.phone,
+      gender: req.body.gender,
+      password: CryptoJS.AES.encrypt(
+        req.body.password,
+        process.env.SECRET_KEY
+      ).toString(),
+    });
+
+    try {
+      const user = await newUser.save();
+      res.status(201).json(user);
+    } catch (err) {
+      res.status(500).json(err);
+    }
+  } else {
+    res.status(403).json("You are not authorised to create users");
+  }
+});
+
+//GET STATS
+router.get("/stats", async (req, res) => {
+  const today = new Date();
+  const lastYear = today.setFullYear(today.setFullYear() - 1);
+
+  try {
+    const data = await User.aggregate([
+      {
+        $project: {
+          month: { $month: "$createdAt" },
+        },
+      },
+      {
+        $group: {
+          _id: "$month",
+          total: { $sum: 1 },
+        },
+      },
+    ]);
+    res.status(200).json(data);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
+//UPDATE
+router.put("/:id", verify, async (req, res) => {
+  if (req.user.id === req.params.id || req.user.isAdmin) {
+    if (req.body.password) {
+      req.body.password = CryptoJS.AES.encrypt(
+        req.body.password,
+        process.env.SECRET_KEY
+      ).toString();
+    }
+
+    try {
+      // const updatedUser = await User.findOneAndUpdate(
+      //   req.params.id,
+      //   {
+      //     $set: req.body,
+      //   },
+      //   { new: true }
+      // );
+      // res.status(200).json(updatedUser);
+
+      const updatedUser = await User.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        { runValidators: true }
+      );
+      res.status(200).json(updatedUser);
+    } catch (err) {
+      res.status(500).json(err);
+    }
+  } else {
+    res.status(403).json("You can update only your account");
+  }
+});
+
+//DELETE
+router.delete("/:id", verify, async (req, res) => {
+  if (req.user.id === req.params.id || req.user.isAdmin) {
+    try {
+      await User.findByIdAndDelete(req.params.id);
+      res.status(200).json("User has been deleted!");
+    } catch (err) {
+      res.status(500).json(err);
+    }
+  } else {
+    res.status(403).json("You can delete only your account");
+  }
+});
+
+module.exports = router;
