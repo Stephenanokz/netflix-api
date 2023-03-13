@@ -14,7 +14,7 @@ app.use(
   cors({
     origin: [
       "https://netflixbystephenanokz.onrender.com",
-      "https://netflix-admin-k061.onrender.com",
+      "https://adminnetflixbystephenanokz.onrender.com",
     ],
     credentials: true,
   })
