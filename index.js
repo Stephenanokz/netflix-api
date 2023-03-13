@@ -6,8 +6,14 @@ const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/users");
 const movieRoutes = require("./routes/movies");
 const listRoutes = require("./routes/lists");
+const cors = require("cors");
 
 const port = process.env.PORT || 8080;
+
+app.use(cors({
+  origin: "https://netflixbystephenanokz.onrender.com",
+  credentials: true
+}))
 
 dotenv.config();
 
