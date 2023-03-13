@@ -10,10 +10,15 @@ const cors = require("cors");
 
 const port = process.env.PORT || 8080;
 
-app.use(cors({
-  origin: "https://netflixbystephenanokz.onrender.com",
-  credentials: true
-}))
+app.use(
+  cors({
+    origin: [
+      "https://netflixbystephenanokz.onrender.com",
+      "https://netflix-admin-k061.onrender.com",
+    ],
+    credentials: true,
+  })
+);
 
 dotenv.config();
 
