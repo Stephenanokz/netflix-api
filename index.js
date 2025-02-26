@@ -13,8 +13,10 @@ const port = process.env.PORT || 8080;
 app.use(
   cors({
     origin: [
-      "https://netflixbystephenanokz.onrender.com",
-      "https://adminnetflixbystephenanokz.onrender.com",
+      "http://localhost:3000/",
+      "http://localhost:3001/",
+      // "https://netflixbystephenanokz.onrender.com",
+      // "https://adminnetflixbystephenanokz.onrender.com",
     ],
     credentials: true,
   })
